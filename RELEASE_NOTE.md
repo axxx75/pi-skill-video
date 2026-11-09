@@ -1,5 +1,17 @@
 # Release notes — pi-skill-video
 
+## 1.0.2 — 2026-11-09
+
+**Skill non caricabile: frontmatter YAML malformato.**
+
+- `skills/video/SKILL.md`: `description:` conteneva `italiana: screenshot reali`. In YAML un
+  `: ` dentro un valore non quotato apre una mappatura annidata → pi segnalava
+  `Nested mappings are not allowed in compact mappings at line 2, column 14` e scartava la skill.
+  Ora `italiana, con screenshot reali` (testo invariato nella sostanza, virgola al posto dei due punti).
+
+Verifica: frontmatter parsa con `yaml.safe_load` (chiavi `name`, `description`); `selftest.sh` OK.
+Controllate tutte le skill installate: nessun altro `description` non quotato con `: `.
+
 ## 1.0.1 — 2026-11-09
 
 **Due difetti trovati uscendo dal prototipo (dove script e progetto stavano nella stessa cartella).**

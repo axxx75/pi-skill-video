@@ -1,6 +1,6 @@
 ---
 name: video
-description: Gira una demo video di un'app web (o di qualsiasi cosa visibile in un browser) con voce narrante italiana: screenshot reali con Playwright, voce neurale con edge-tts (o Kokoro offline), composizione e render con HyperFrames, encode e loudness con FFmpeg. Usa quando l'utente chiede un video demo, un walkthrough, un video di 1-3 minuti di un prodotto, o dice "fai il video di questa app".
+description: Gira una demo video di un'app web (o di qualsiasi cosa visibile in un browser) con voce narrante italiana, con screenshot reali con Playwright, voce neurale con edge-tts (o Kokoro offline), composizione e render con HyperFrames, encode e loudness con FFmpeg. Usa quando l'utente chiede un video demo, un walkthrough, un video di 1-3 minuti di un prodotto, o dice "fai il video di questa app".
 ---
 
 # video
