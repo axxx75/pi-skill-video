@@ -6,10 +6,15 @@
                    video/index.html (host in timeline + audio per scena)
 
 Idempotente: l'audio si rigenera solo se manca (--force-tts per rigenerarlo).
-Uso: python3 compose.py scenes.json [--force-tts]
+Uso: python3 compose.py scenes.json [--force-tts] [--subs]
+
+--subs  scrive anche video/renders/subtitles.vtt (sottotitoli del video intero, con gli
+        offset delle scene). edge-tts produce i tempi parola per parola: e' l'unico modo per
+        avere sottotitoli sincronizzati senza riscriverli a mano.
 """
 import html
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -26,19 +31,52 @@ def need(tool, hint):
         sys.exit(f"{tool} non trovato nel PATH. {hint}")
 
 
-def tts(cfg, scene, force):
+def tts(cfg, scene, force, subs=False):
     out = ASSETS / f"{scene['id']}.mp3"
-    if out.exists() and not force:
+    vtt = ASSETS / f"{scene['id']}.vtt"
+    # Con --subs un mp3 senza .vtt non basta: edge-tts va richiamato (idempotente sul resto).
+    if out.exists() and not force and (not subs or vtt.exists()):
         return out
     need("edge-tts", "Installa: python3 -m venv ~/.local/opt/edge-tts && ~/.local/opt/edge-tts/bin/pip install edge-tts")
     txt = ROOT / "audio" / f"{scene['id']}.txt"
     txt.parent.mkdir(exist_ok=True)
     txt.write_text(scene["voice"] + "\n", encoding="utf-8")
-    subprocess.run(
-        ["edge-tts", "--voice", cfg.get("voice", "it-IT-IsabellaNeural"),
-         "--rate", cfg.get("rate", "-5%"), "--file", str(txt), "--write-media", str(out)],
-        check=True)
+    cmd = ["edge-tts", "--voice", cfg.get("voice", "it-IT-IsabellaNeural"),
+           "--rate", cfg.get("rate", "-5%"), "--file", str(txt), "--write-media", str(out)]
+    if subs:
+        cmd += ["--write-subtitles", str(vtt)]
+    subprocess.run(cmd, check=True)
     return out
+
+
+CUE = re.compile(r"^(\d+):(\d+):(\d+[.,]\d+)\s*-->\s*(\d+):(\d+):(\d+[.,]\d+)")
+
+
+def _secs(h, m, s):
+    return int(h) * 3600 + int(m) * 60 + float(s.replace(",", "."))
+
+
+def _clock(t):
+    h, t = divmod(t, 3600)
+    m, s = divmod(t, 60)
+    return f"{int(h):02d}:{int(m):02d}:{s:06.3f}"
+
+
+def shift_vtt(text, offset):
+    """Cue di una scena spostati di `offset` e senza il loro numero: si rinumerano alla fine."""
+    out, cue = [], None
+    for line in text.splitlines():
+        m = CUE.match(line.strip())
+        if m:
+            a = _secs(*m.group(1, 2, 3)) + offset
+            b = _secs(*m.group(4, 5, 6)) + offset
+            cue = [f"{_clock(a)} --> {_clock(b)}"]
+            out.append(cue)
+        elif line.strip() and line.strip() != "WEBVTT" and not line.strip().isdigit():
+            if cue:
+                cue.append(line)
+    return out
+
 
 
 def duration(path):
@@ -119,6 +157,7 @@ def main():
     SCENES = VIDEO / "scenes"
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     force = "--force-tts" in sys.argv
+    subs = "--subs" in sys.argv
     need("ffprobe", "Installa FFmpeg static in ~/.local (vedi README della skill video).")
     for d in (ASSETS, SCENES):
         d.mkdir(parents=True, exist_ok=True)
@@ -129,12 +168,25 @@ def main():
 
     starts, audios, plan, t = [], [], [], lead
     for scene in cfg["scenes"]:
-        adur = duration(tts(cfg, scene, force))
+        adur = duration(tts(cfg, scene, force, subs))
         starts.append(t)
         audios.append(adur)
         plan.append((scene["id"], t, adur))
         t += adur + 0.3 + pause
     total = starts[-1] + audios[-1] + 0.3 + tail
+
+    if subs:
+        cues = []
+        for scene, start in zip(cfg["scenes"], starts):
+            vtt = ASSETS / f"{scene['id']}.vtt"
+            if not vtt.exists():
+                sys.exit(f"sottotitoli mancanti per {scene['id']}: rilancia compose.py --subs --force-tts")
+            cues += shift_vtt(vtt.read_text(encoding="utf-8"), start)
+        out = VIDEO / "renders" / "subtitles.vtt"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        body = "\n\n".join(f"{i}\n" + "\n".join(c) for i, c in enumerate(cues, 1))
+        out.write_text(f"WEBVTT\n\n{body}\n", encoding="utf-8")
+        print(f"sottotitoli {len(cues)} cue -> {out}")
 
     hosts, audio_tags, fades = [], [], []
     for i, scene in enumerate(cfg["scenes"]):

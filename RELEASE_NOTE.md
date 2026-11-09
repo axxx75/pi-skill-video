@@ -1,5 +1,25 @@
 # Release notes — pi-skill-video
 
+## 1.0.3 — 2026-11-09
+
+**Le lacune emerse dalla guida del video lungo (Vault Hub), chiuse dove costavano di più.**
+
+- `shoot.mjs --probe <url|pagina> [...]` — esplorazione prima di scrivere le scene: un PNG per
+  pagina in `video/probe/` e, per ogni pagina, `cx`/`cy` dei blocchi che si evidenziano (`h1`,
+  `h2`, figli di `#kpi` e di `#filters`). Nasce da un errore pagato: coordinate stimate a occhio =
+  tre render con il cerchio sul riquadro sbagliato.
+- `compose.py --subs` — `video/renders/subtitles.vtt` per il video intero, dagli
+  `--write-subtitles` di edge-tts (tempi veri, non spalmati a mano) spostati sull'inizio di ogni
+  scena. Se un mp3 c'è ma il `.vtt` no, quel giro richiama edge-tts da solo.
+- `SKILL.md`: sezioni **Prima di scrivere le scene** (probe, coordinate, rotte da disattivare tipo
+  `?perf=0`) e **Video da 3 minuti** (150 parole/min, 400-450 parole, 12-15 scene da 10-20 s),
+  sezione **Sottotitoli**, `NODE_PATH` nei comandi e nel Setup, tre righe nuove nella tabella
+  degli errori noti.
+- `selftest.sh`: copre `--probe` (PNG + coordinate).
+
+Test: `selftest.sh` OK (6,0 s). `--subs` provato sul video demo di pure-obs: 6 cue, tempi
+allineati alle scene (0.1 s, 3.75 s, … 30.53 s).
+
 ## 1.0.2 — 2026-11-09
 
 **Skill non caricabile: frontmatter YAML malformato.**

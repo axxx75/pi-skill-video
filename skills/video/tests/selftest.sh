@@ -57,11 +57,16 @@ for id in s1 s2; do
 done
 ls -l video/assets
 
-echo "== 3/5 playwright-core =="
+echo "== 3/5 playwright-core + probe =="
 if [ ! -d "$SKILL/scripts/node_modules/playwright-core" ] && [ ! -d node_modules/playwright-core ]; then
   npm i --silent --no-save playwright-core >/dev/null 2>&1 || { echo "playwright-core non installabile"; exit 2; }
 fi
-NODE_PATH="$(pwd)/node_modules:$SKILL/scripts/node_modules" node "$SKILL/scripts/shoot.mjs" scenes.json
+export NODE_PATH="$(pwd)/node_modules:$SKILL/scripts/node_modules"
+node "$SKILL/scripts/shoot.mjs" scenes.json
+# --probe: esplorazione prima delle scene. Deve scrivere il PNG e le coordinate dei blocchi.
+node "$SKILL/scripts/shoot.mjs" --probe "demo/app.html#b" | tee probe.log
+[ -s "$(ls video/probe/*.png 2>/dev/null | head -1)" ] || { echo "FAIL: probe senza screenshot"; exit 1; }
+grep -q 'cx=' probe.log || { echo "FAIL: probe senza coordinate"; exit 1; }
 
 echo "== 4/5 compose + render =="
 cp "$SKILL/templates/hyperframes.json" video/

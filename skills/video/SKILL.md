@@ -23,9 +23,13 @@ Comandi, dalla cartella di lavoro del video (quella con `scenes.json`):
 ```bash
 # percorso del pacchetto installato (o del sorgente, durante lo sviluppo)
 SKILL="${PI_SKILL_VIDEO_DIR:-$HOME/.pi/agent/git/github.com/axxx75/pi-skill-video/skills/video}"
-node  "$SKILL/scripts/shoot.mjs" scenes.json          # serve playwright-core (vedi Setup)
-python3 "$SKILL/scripts/compose.py" scenes.json       # --force-tts per rigenerare la voce
-bash  "$SKILL/scripts/render.sh"                      # check + render + -16 LUFS
+export NODE_PATH="$PWD/node_modules"                     # serve a shoot.mjs (vedi Setup)
+
+node    "$SKILL/scripts/shoot.mjs" --probe <url|pagina>  # esplorazione: screenshot + coordinate
+node    "$SKILL/scripts/shoot.mjs" scenes.json           # screenshot delle scene
+python3 "$SKILL/scripts/compose.py" scenes.json          # --force-tts per rigenerare la voce
+python3 "$SKILL/scripts/compose.py" scenes.json --subs   # + video/renders/subtitles.vtt
+bash    "$SKILL/scripts/render.sh"                       # check + render + -16 LUFS
 ```
 
 Idempotente: l'audio si rigenera solo se il file manca; lo screenshot si rifà sempre; `compose.py` riscrive l'HTML e stampa il piano (start, durata audio, totale).
@@ -38,10 +42,55 @@ Idempotente: l'audio si rigenera solo se il file manca; lo screenshot si rifà s
 | `edge-tts` in venv + symlink in `~/.local/bin` | `edge-tts --version` |
 | Kokoro offline: `HYPERFRAMES_PYTHON` → venv con `kokoro-onnx soundfile` | `echo $HYPERFRAMES_PYTHON` |
 | Chrome headless | `ls ~/.cache/puppeteer/chrome-headless-shell/*/` |
-| `playwright-core` nel progetto video | `npm i playwright-core` |
+| `playwright-core` nel progetto video | `npm i playwright-core` + `export NODE_PATH=$PWD/node_modules` |
 | HyperFrames | `npx -y hyperframes@0.9.26 doctor` → tutto ✓ (whisper/BGM opzionali) |
 
 Install completo dell'ecosistema: `bash ~/PI/scripts/video/install.sh` (idempotente, no sudo).
+
+## Prima di scrivere le scene (esplorazione)
+
+Due passi, in quest'ordine. Saltarli costa render buttati.
+
+```bash
+node "$SKILL/scripts/shoot.mjs" --probe http://127.0.0.1:8000/index.html \
+     http://127.0.0.1:8000/volumi.html http://127.0.0.1:8000/analytics.html
+```
+
+- Un PNG per pagina in `video/probe/` (niente voce, niente composizione) e, per ogni pagina,
+  le coordinate dei blocchi che di solito si evidenziano: `h1`, `h2`, ogni figlio di `#kpi` e di
+  `#filters`, con `cx`/`cy` in pixel dello screenshot.
+- **`zoom` e `highlight` si prendono da quelle coordinate**, non a occhio sulla foto: un cerchio
+  sbagliato di 200 px si vede subito nel video e non nel PNG.
+- Per gli elementi fuori da quei contenitori: `page.evaluate` con `getBoundingClientRect()` in uno
+  script usa-e-getta, oppure si aggiunge il selettore a quelli del probe.
+- Il probe serve anche a scoprire quali pagine chiedono al server cose lente o laterali
+  (`/api/perf`, `/api/box`): nella scena quelle rotte si disattivano (`?perf=0`) o si evitano.
+
+Solo dopo si scrive `scenes.json`: una funzione = una scena, e ogni scena ha il suo screenshot reale.
+
+## Video da 3 minuti
+
+| Grandezza | Valore |
+|---|---|
+| Parlato con `rate -5%` | ~150 parole/minuto |
+| 3 minuti | 400-450 parole totali |
+| Scene | 12-15 da 10-20 s (una funzione = una scena) |
+| Durata scena | audio + 0,5-1 s di respiro (`pause`) |
+
+Ordine che regge: promessa (15 s) → dashboard → integrazioni → funzioni distintive →
+sicurezza/ruoli → chiusura con il payoff. Oltre i 3 minuti serve un motivo: il taglio è la prima
+leva, non l'aggiunta.
+
+## Sottotitoli
+
+`compose.py --subs` scrive `video/renders/subtitles.vtt` per il video intero: i cue arrivano da
+`edge-tts --write-subtitles` (tempi parola per parola) e vengono spostati sull'inizio di ogni scena.
+Se un mp3 esiste già senza `.vtt`, quel giro richiama edge-tts (`--subs --force-tts` rigenera tutto).
+Da caricare come sidecar su YouTube/LinkedIn; per averli dentro l'mp4:
+
+```bash
+ffmpeg -i video/renders/final.mp4 -i video/renders/subtitles.vtt -c copy -c:s mov_text out.mp4
+```
 
 ## scenes.json
 
@@ -119,6 +168,9 @@ Per usare Kokoro al posto di edge-tts: generare i file `video/assets/<id>.mp3` c
 | `first_frame_empty` | `lead` > 0 o titolo che entra dopo | `lead: 0`, titolo visibile a 0 s |
 | Cerchio disallineato dopo lo zoom | SVG fuori dal contenitore scalato | l'SVG sta dentro `.wrap` (già così) |
 | Voce robotica | voce SAPI/Windows o TTS di sistema | edge-tts neurale |
+| `MODULE_NOT_FOUND: playwright-core` | `shoot.mjs` risolve dal proprio path, non dalla cwd | `export NODE_PATH=<progetto>/node_modules` |
+| Cerchio o zoom sul punto sbagliato | coordinate stimate a occhio sulla foto | `--probe` e copiare `cx`/`cy` dai blocchi veri |
+| Scena statica che annoia | nessuna deriva, nessuno zoom | `zoom.scale` 1.05-1.2 sempre, più un `highlight` |
 | Render lentissimo | capture via screenshot | `HYPERFRAMES_BROWSER_PATH` → chrome-headless-shell (2.6× più veloce) |
 | Mezzo schermo vuoto | screenshot piccolo su canvas geometrico | zoom sul riquadro o più dati demo |
 
