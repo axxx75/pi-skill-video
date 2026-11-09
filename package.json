@@ -1,0 +1,33 @@
+{
+  "name": "pi-skill-video",
+  "version": "1.0.0",
+  "description": "Skill video per pi: demo video di un'app web con screenshot reali (Playwright), voce italiana per scena (edge-tts o Kokoro), composizione e render HyperFrames, loudness con FFmpeg.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axxx75/pi-skill-video.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-skill",
+    "video",
+    "hyperframes",
+    "playwright",
+    "edge-tts"
+  ],
+  "files": [
+    "skills/",
+    "README.md",
+    "RELEASE_NOTE.md",
+    "docs/",
+    "LICENSE"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}

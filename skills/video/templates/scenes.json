@@ -1,0 +1,33 @@
+{
+  "title": "Vault Hub — tre funzioni in trenta secondi",
+  "voice": "it-IT-IsabellaNeural",
+  "rate": "-5%",
+  "pause": 0.7,
+  "lead": 0.0,
+  "tail": 1.2,
+  "scenes": [
+    {
+      "id": "s1",
+      "url": "demo/app.html#dash",
+      "voice": "Da qui vediamo tutto lo storage in un colpo d'occhio: capacita, volumi e array.",
+      "title": "Panoramica dello storage",
+      "zoom": { "cx": 480, "cy": 300, "scale": 1.14 },
+      "highlight": { "x": 232, "y": 322, "r": 118 }
+    },
+    {
+      "id": "s2",
+      "url": "demo/app.html#cost",
+      "voice": "La scheda Costi mostra quanto spendiamo davvero, per sito e per terabyte.",
+      "title": "Costi dichiarati, per sito e per TB",
+      "zoom": { "cx": 1400, "cy": 520, "scale": 1.18 },
+      "steps": [{ "click": "#n-cost" }, { "wait": 250 }]
+    },
+    {
+      "id": "s3",
+      "url": "demo/app.html#usr",
+      "voice": "E le utenze: chi entra, con che ruolo, e chi non entra da novanta giorni.",
+      "title": "Utenze, ruoli e inattivi",
+      "zoom": { "cx": 960, "cy": 620, "scale": 1.12 }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+*.py[cod]
+/video/
+/brag-output*/
+*.mp4
+*.mp3
