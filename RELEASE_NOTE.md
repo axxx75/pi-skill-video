@@ -1,5 +1,12 @@
 # Release notes — pi-skill-video
 
+## 1.0.4 — 2026-11-09
+
+- `shoot.mjs --probe`: il nome dei PNG non si porta dietro la query (`02-volumi.html_perf_0.png`
+  → `02-volumi.png`). Il `?perf=0` resta nell'URL, non nel nome del file.
+
+Test: `selftest.sh` OK.
+
 ## 1.0.3 — 2026-11-09
 
 **Le lacune emerse dalla guida del video lungo (Vault Hub), chiuse dove costavano di più.**

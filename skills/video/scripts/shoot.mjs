@@ -58,7 +58,7 @@ if (probeAt >= 0) {
   for (const [i, u] of urls.entries()) {
     await page.goto('about:blank');
     await page.goto(targetOf(u), { waitUntil: 'networkidle' });
-    const name = (u.split('#')[0].split('/').filter(Boolean).pop() || `p${i + 1}`)
+    const name = (u.split('#')[0].split('?')[0].split('/').filter(Boolean).pop() || `p${i + 1}`)
       .replace(/\.\w+$/, '').replace(/[^\w.-]/g, '_');
     const file = resolve(out, `${String(i + 1).padStart(2, '0')}-${name}.png`);
     await page.screenshot({ path: file });
