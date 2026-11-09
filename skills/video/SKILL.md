@@ -21,7 +21,8 @@ scenes.json ──shoot.mjs──▶ video/assets/<id>.png     (Playwright + Chr
 Comandi, dalla cartella di lavoro del video (quella con `scenes.json`):
 
 ```bash
-SKILL="${PI_SKILL_VIDEO_DIR:-$HOME/PI/repos/pi-skill-video/skills/video}"
+# percorso del pacchetto installato (o del sorgente, durante lo sviluppo)
+SKILL="${PI_SKILL_VIDEO_DIR:-$HOME/.pi/agent/git/github.com/axxx75/pi-skill-video/skills/video}"
 node  "$SKILL/scripts/shoot.mjs" scenes.json          # serve playwright-core (vedi Setup)
 python3 "$SKILL/scripts/compose.py" scenes.json       # --force-tts per rigenerare la voce
 bash  "$SKILL/scripts/render.sh"                      # check + render + -16 LUFS

@@ -1,5 +1,22 @@
 # Release notes — pi-skill-video
 
+## 1.0.1 — 2026-11-09
+
+**Due difetti trovati uscendo dal prototipo (dove script e progetto stavano nella stessa cartella).**
+
+- `render.sh` faceva `cd ../../..` assumendo di stare dentro il progetto video: dal checkout
+  installato finiva nella radice del pacchetto (`No composition found`). Ora si esegue **dalla
+  cartella del video**, entra in `video/` per `check`/`render` (HyperFrames legge la cwd) e scrive
+  `final.mp4` in `video/renders/`.
+- `SKILL.md` indicava come default il repo sorgente; ora punta al **checkout installato**
+  (`~/.pi/agent/git/github.com/axxx75/pi-skill-video/skills/video`), con `PI_SKILL_VIDEO_DIR` come
+  override per lo sviluppo.
+- `selftest.sh` ora esegue `render.sh` (prima replicava i comandi a mano: per questo il `cd`
+  sbagliato era invisibile) e verifica `final.mp4`.
+
+Test: `selftest.sh` OK (5.8 s, audio aac, loudnorm misurato prima/dopo). Collaudo reale su un video
+di 3 scene: 21.3 s, -17.5 → -16.4 LUFS.
+
 Formato: una sezione per versione, dalla più recente. Ogni voce = modifica testata e accettata da Axxx,
 allineata su tre punti (repo locale `~/PI/repos/pi-skill-video`, checkout installato, GitHub).
 Le versioni precedenti sono ricostruibili dalla storia git.

@@ -66,10 +66,11 @@ NODE_PATH="$(pwd)/node_modules:$SKILL/scripts/node_modules" node "$SKILL/scripts
 echo "== 4/5 compose + render =="
 cp "$SKILL/templates/hyperframes.json" video/
 python3 "$SKILL/scripts/compose.py" scenes.json
-(cd video && npx -y hyperframes@0.9.26 check 2>&1 | tail -3 && npx -y hyperframes@0.9.26 render 2>&1 | tail -3)
+bash "$SKILL/scripts/render.sh" 2>&1 | tail -8
 
 echo "== 5/5 verifica =="
-MP4="$(ls -t video/renders/*.mp4 | head -1)"
+MP4="video/renders/final.mp4"
+[ -s "$MP4" ] || MP4="$(ls -t video/renders/*.mp4 | head -1)"
 [ -s "$MP4" ] || { echo "FAIL: nessun mp4"; exit 1; }
 AUDIO="$(ffprobe -v error -select_streams a -show_entries stream=codec_name -of csv=p=0 "$MP4")"
 DUR="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$MP4")"
