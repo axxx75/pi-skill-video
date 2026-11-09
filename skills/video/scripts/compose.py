@@ -116,7 +116,10 @@ def scene_file(sid, dur, scene):
         tweens.append(
             f'    tl.fromTo("#{sid}-circle", {{ opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }}, '
             f'{{ opacity: 0.95, scale: 1, duration: 0.5, ease: "power2.out" }}, 0.6);')
-        tweens.append(f'    tl.to("#{sid}-circle", {{ opacity: 0, duration: 0.4 }}, 2.8);')
+        # Il cerchio accompagna la frase: resta proporzionale alla scena (3,2-6 s), non 3 s fissi,
+        # o nelle scene da 12-14 s sparisce mentre la voce sta ancora parlando del punto.
+        hold = max(3.2, min(dur - 0.5, 6.0))
+        tweens.append(f'    tl.to("#{sid}-circle", {{ opacity: 0, duration: 0.4 }}, {hold - 0.4:.2f});')
 
     return f"""<template>
   <style>

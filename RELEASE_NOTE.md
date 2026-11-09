@@ -1,5 +1,14 @@
 # Release notes — pi-skill-video
 
+## 1.0.5 — 2026-11-09
+
+- `compose.py`: il cerchietto di evidenziazione resta `max(3.2, min(durata - 0.5, 6))` secondi.
+  Prima spariva a 3,2 s fissi: nelle scene da 10-14 s (la norma nei video lunghi) si spegneva
+  mentre la voce stava ancora parlando del punto evidenziato.
+
+Test: `selftest.sh` OK; verificato sul video demo di pure-obs (scene da 10-14 s, cerchio visibile
+a 3 s e sparito prima della fine).
+
 ## 1.0.4 — 2026-11-09
 
 - `shoot.mjs --probe`: il nome dei PNG non si porta dietro la query (`02-volumi.html_perf_0.png`
